@@ -1,0 +1,6 @@
+{
+  "name": "Recap Generator V2",
+  "description": "AI-powered tool for manga/manhwa content creators to automatically generate video scripts, viral hooks, and image-based narrations with a futuristic UI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

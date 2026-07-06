@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-dark: #050505;
+  --color-neon-yellow: #efff00;
+  --color-neon-cyan: #00d2ff;
+  --color-neon-blue: #00d2ff;
+  --color-neon-green: #00ff66;
+  --color-neon-magenta: #00ff66;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-tech: "Space Grotesk", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-dark text-white font-sans antialiased overflow-x-hidden;
+  }
+}
+
+@layer components {
+  .glow-cyan {
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+  }
+  
+  .glow-blue {
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+  }
+  
+  .glow-yellow {
+    box-shadow: 0 0 15px rgba(239, 255, 0, 0.15);
+  }
+
+  .neon-border-cyan {
+    @apply border border-neon-cyan/20 shadow-[0_0_10px_rgba(0,210,255,0.1)];
+  }
+
+  .neon-border-blue {
+    @apply border border-neon-blue/20 shadow-[0_0_10px_rgba(0,210,255,0.1)];
+  }
+
+  .neon-border-green {
+    @apply border border-neon-green/20 shadow-[0_0_10px_rgba(0,255,102,0.1)];
+  }
+
+  .neon-border-yellow {
+    @apply border border-neon-yellow/20 shadow-[0_0_10px_rgba(239,255,0,0.1)];
+  }
+
+  .glass-card {
+    @apply bg-[rgba(20,20,20,0.7)] backdrop-blur-[10px] border border-white/10 rounded-lg p-4;
+  }
+
+  .tech-button {
+    @apply relative overflow-hidden px-6 py-2 rounded-md font-tech font-bold uppercase tracking-wider transition-all duration-300;
+  }
+
+  .tech-button-yellow {
+    @apply bg-neon-yellow text-black;
+    &:hover {
+      @apply bg-neon-yellow/90;
+      box-shadow: 0 0 20px rgba(239, 255, 0, 0.3);
+    }
+    @apply active:scale-95;
+  }
+
+  .tech-button-cyan {
+    @apply bg-neon-cyan text-black;
+    &:hover {
+      @apply bg-neon-cyan/90;
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+    }
+    @apply active:scale-95;
+  }
+
+  .tech-button-outline {
+    @apply border border-white/20 hover:border-neon-cyan hover:text-neon-cyan;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-black;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neon-yellow rounded-full hover:bg-neon-yellow/80;
+  }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.05), transparent);
+  pointer-events: none;
+  animation: scanline 8s linear infinite;
+  z-index: 50;
+}
+
