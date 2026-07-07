@@ -86,12 +86,23 @@ export async function generateRecapScript(params: GenerateScriptParams) {
   const { mangaTitle, format, style, mode, imageDatas } = params;
 
   const styleContext = {
-    "Santai Tongkrongan": "Gaya YouTuber santai, pakai gue/lu/cuy, asyik, kayak lagi cerita ke temen. Sering pakai kata 'anjir', 'parah sih', 'fix', 'gila'. Nyantai tapi to the point, langsung menceritakan inti adegan tanpa bertele-tele.",
-    "Storytelling Serius": "Gaya YouTuber narasi mendalam, fokus pada emosi dan detail alur, padat, lugas, dan efisien dalam menyampaikan plot cerita tanpa berputar-putar.",
-    "Dramatis": "Gaya YouTuber dramatis, fokus pada intensitas aksi dan ketegangan plot tanpa menggunakan kalimat puitis atau kata-kata mendayu.",
-    "Funny / Roasting": "Gaya YouTuber roasting, penuh sarkasme kocak, ngetawain kelakuan karakter, to-the-point, cepat, dan sangat ekspresif.",
-    "Cinematic Trailer": "Gaya YouTuber trailer, singkat, padat, penuh kalimat-kalimat punchy yang langsung menyambar ke inti misteri tanpa basa-basi.",
-    "Meme Recap": "Gaya YouTuber meme, sangat cepat, sarkatis, referensial, tidak bertele-tele, langsung menceritakan kejadian konyolnya."
+    "Santai Tongkrongan": `Gaya YouTuber santai, pakai kata 'gue/lu/cuy/gitu/auto/anjir/singkat cerita'. Sangat ringkas, seru, asyik, dan langsung ke inti adegan tanpa basa-basi bertele-tele atau mengulang-ulang percakapan. 
+Wajib ikuti gaya bercerita dari contoh naskah berikut:
+---
+"Ya singkat cerita setelah ai merasa tenang,tak lama kemudian ibu Eiji datang sambil membawakan segelas teh hitam cuy. Dan waktu ai nyoba ,dia auto terkejut karna teh itu sangat enak gitu. Dan tentunya itu bikin ibu Eiji merasa senang cuy. 
+Yah singkatnya disini mereka itu terus ngobrol dan jadi lebih akrab gitu. 
+
+Nah setelah moment hangat barusan, ai pun izin buat pulang cuy.
+Dan Eiji langsung nawarin diri buat nganter ai sampai ke stasiun. 
+Akan tetapi hal itu malah ditolak oleh ai cuy dengan alasan, kalau Eiji terlalu baik, nanti dia mudah merasa kesepian ketika tak ada Eiji lagi gitu. 
+ Selain itu ai nambahinlagi cuy, kalau Eiji tak perlu hawatir, karna setelah bertemu Eiji dia akhirnya punya alasan lagi untuk tetap hidup.
+Yah Eiji pun akhirnya cuma bisa tersenyum lembut cuy."
+---`,
+    "Storytelling Serius": "Gaya YouTuber narasi mendalam, fokus pada emosi dan detail alur secara ringkas, padat, lugas, dan efisien dalam menyampaikan plot cerita tanpa berputar-putar.",
+    "Dramatis": "Gaya YouTuber dramatis, fokus pada intensitas aksi dan ketegangan plot tanpa menggunakan kalimat puitis atau kata-kata mendayu. Sangat ringkas, dinamis, dan langsung ke inti konflik.",
+    "Funny / Roasting": "Gaya YouTuber roasting, penuh sarkasme kocak, ngetawain kelakuan karakter, to-the-point, sangat cepat, ringkas, dan ekspresif.",
+    "Cinematic Trailer": "Gaya YouTuber trailer, sangat singkat, sangat padat, penuh kalimat-kalimat punchy yang langsung menyambar ke inti misteri tanpa basa-basi.",
+    "Meme Recap": "Gaya YouTuber meme, sangat cepat, sarkatis, referensial, tidak bertele-tele, langsung menceritakan kejadian konyolnya secara ringkas."
   }[style];
 
   const modeContext = {
@@ -101,30 +112,29 @@ export async function generateRecapScript(params: GenerateScriptParams) {
 
   const prompt = `
     Kamu adalah Content Creator Manga Recap (YouTuber) terbaik "Manga Only Studio" yang punya gaya bercerita sangat asyik, santai, dan TO THE POINT.
-    Tugasmu adalah membuat NASKAH VIDEO RECAP MANGA yang DETAIL, LENGKAP, dan MENGALIR dari ${format} berjudul "${mangaTitle}".
+    Tugasmu adalah membuat NASKAH VIDEO RECAP MANGA yang RINGKAS, PADAT, dan MENGALIR dari ${format} berjudul "${mangaTitle}".
     
     MODE: ${modeContext}
-    GAYA BAHASA: ${styleContext} (Pastikan narasi terasa sangat natural, mengalir, tanpa basa-basi berlebih).
+    GAYA BAHASA: ${styleContext} (Pastikan narasi terasa sangat alami, mengalir, tanpa bertele-tele).
 
-    STRUKTUR (SATU GAMBAR SATU PARAGRAF - MUTLAK):
-    - Cerita wajib dibagi menjadi beberapa adegan berurutan.
-    - PENTING: Jumlah adegan ('scenes') di dalam list wajib persis sama dengan jumlah gambar/panel manga yang diunggah oleh pengguna (Jika ada ${imageDatas?.length || 0} gambar diunggah, maka hasilkan tepat ${imageDatas?.length || 0} adegan).
-    - Setiap adegan (scene) menceritakan isi dan dialog dari gambar/panel manga yang bersangkutan secara urut (Adegan 1 untuk gambar ke-1, Adegan 2 untuk gambar ke-2, dst).
-    - Setiap adegan memiliki tepat SATU paragraf narasi cerita (bahasa Indonesia) dan SATU prompt visual deskripsi gambar (bahasa Inggris) yang sangat detail agar penggambaran karakternya sesuai aslinya.
+    STRUKTUR (SATU GAMBAR / IMAGE SATU PARAGRAF):
+    - Cerita wajib dibagi menjadi beberapa segmen gambar berurutan (Image 1, Image 2, dst.).
+    - Setiap segmen mewakili tepat SATU gambar/adegan, yang memiliki tepat SATU paragraf narasi ringkas (bahasa Indonesia, panjang 2-5 kalimat padat) dan SATU prompt visual deskripsi gambar (bahasa Inggris) yang mewakili kejadian di gambar tersebut.
+    - Judul adegan wajib dinamai dengan format: "Image 1", "Image 2", dst.
     - Output wajib dalam JSON terstruktur sesuai skema.
 
     ATURAN EMAS DAN PENTING (WAJIB DIPATUHI SECARA MUTLAK):
     1. WAJIB MEMULAI KALIMAT PERTAMA NASKAH DENGAN: "diawal cerita .... " (Gunakan format persis seperti ini di awal hasil generatemu).
-    2. JANGAN PERNAH MEMASUKKAN KATA '[ADADEGAN:.....]' ATAU MARKER SCENE APAPUN: Hilangkan semua penanda adegan, judul babak, kurung siku, dan penomoran. Output harus murni berupa narasi paragraf tanpa marker sama sekali.
-    3. JANGAN BASA-BASI HINGGA BERTELE-TELE: Langsung bahas ke inti cerita dari detik pertama! Jangan lakukan pembukaan bertele-tele, sapaan penonton, perkenalan diri, atau basa-basi apa pun. Fokus langsung to the point.
-    4. JANGAN DIRANGKUM (NO SUMMARY): Ceritakan setiap peristiwa secara runtut sesuai dengan panel. Namun, ingat bahwa menceritakan secara detail bukan berarti menambahkan kata-kata puitis atau deskripsi panjang lebar yang tidak ada di gelembung teks. Ceritakan kejadiannya secara efisien, praktis, tetapi lengkap semua dialognya masuk.
+    2. JANGAN PERNAH MEMASUKKAN KATA '[ADADEGAN:.....]' ATAU MARKER SCENE APAPUN di dalam narasi: Hilangkan semua penanda adegan, judul babak, kurung siku, dan penomoran dari teks narasi utama.
+    3. JANGAN BASA-BASI DAN JANGAN TERLALU DETAIL: Langsung bahas ke inti cerita dari detik pertama! Jangan lakukan pembukaan bertele-tele, sapaan penonton, perkenalan diri, atau basa-basi apa pun. Jangan mengulang-ulang percakapan secara berputar-putar.
+    4. SANGAT RINGKAS DAN TO THE POINT (CONCISE): Ceritakan kejadiannya secara efisien, praktis, seru, langsung menceritakan inti peristiwa atau garis besar dialognya tanpa berputar-putar. Fokus pada pacing yang cepat dan mengalir.
     5. PENALAAN MEMBACA DARI KANAN KE KIRI (RTL - Right-to-Left): Ingat ini adalah ${format}, cara membacanya harus sesuai tata letak standar dari KANAN ke KIRI untuk setiap bagian panel di gambar. Hubungkan tiap panel secara urut.
-    6. WAJIB MEMASUKKAN SEMUA GELEMBUNG DIALOG / PROLOG / MONOLOG / TEKS: Semua teks narasi, prolog, balon ucapan dialog karakter, dan gumaman kata batin yang ada di gambar harus masuk ke dalam narasi naskah! JANGAN ADA SATUPUN YANG TERLEWAT! Sampaikan semua percakapan tersebut ke dalam narasi bahasa Indonesia yang luwes dan asyik. Jangan melenceng dari teks asli panel.
+    6. MASUKKAN GELEMBUNG DIALOG SECARA RINGKAS: Narasi harus mencakup dialog, prolog, monolog, dan gumaman batin karakter, namun sampaikan secara ringkas dan tidak bertele-tele. Jangan ada dialog panjang yang ditulis berulang-ulang.
     7. HINDARI SOUND EFFECT (SFX).
     8. TAHU SELURUH ALUR CERITA (SUDAH PARIPURNA).
     9. JANGAN HALU (AKURAT).
     10. JANGAN LEBAY, PUITIS, ATAU BERTELE-TELE (TO THE POINT).
-    11. KONSISTENSI KARAKTER DAN PRESISI (WAJIB): Deskripsi visual pada 'imagePrompt' harus mendeskripsikan secara detail ciri fisik karakter utama (gaya & warna rambut, jenis pakaian, ekspresi wajah) yang dicocokkan persis dengan visual panel manga asli yang diunggah, agar hasil generator gambar tetap konsisten dari adegan ke adegan.
+    11. GABUNGKAN ALUR CERITA: Pada properti 'script' utama di JSON, gabungkan seluruh paragraf narasi tersebut secara urut dengan pemisah baris kosong ganda (double newline) TANPA menambahkan label penanda apa pun (jangan tulis "IMAGE 1", "HALAMAN 1", "Image", atau "Halaman") agar naskah bersih dan bisa langsung dibaca dengan lancar.
   `;
 
   const contents: any[] = [{ text: prompt }];
@@ -160,11 +170,11 @@ export async function generateRecapScript(params: GenerateScriptParams) {
               properties: {
                 title: {
                   type: Type.STRING,
-                  description: "Judul adegan, misal 'Adegan 1', 'Adegan 2', dst."
+                  description: "Judul adegan, misal 'Image 1', 'Image 2', dst."
                 },
                 narrative: {
                   type: Type.STRING,
-                  description: "Satu paragraf narasi cerita bahasa Indonesia yang sangat detail, asyik, santai, dan to-the-point."
+                  description: "Satu paragraf narasi cerita bahasa Indonesia yang sangat ringkas, asyik, santai, dan to-the-point."
                 },
                 imagePrompt: {
                   type: Type.STRING,
@@ -248,8 +258,19 @@ export function parseGeminiResponse(rawText: string) {
     const cleanJson = rawText.trim().replace(/^```json\s*/i, "").replace(/```$/, "").trim();
     const parsed = JSON.parse(cleanJson);
     if (parsed.scenes && Array.isArray(parsed.scenes)) {
-      scenes = parsed.scenes;
-      script = parsed.scenes.map((s: any) => s.narrative).join("\n\n");
+      scenes = parsed.scenes.map((s: any, idx: number) => {
+        let title = s.title || `Image ${idx + 1}`;
+        // Normalize any returned titles that might contain "halaman" or similar
+        if (title.toLowerCase().includes("halaman")) {
+          title = title.replace(/halaman/i, "Image");
+        }
+        return {
+          title,
+          narrative: s.narrative,
+          imagePrompt: s.imagePrompt
+        };
+      });
+      script = scenes.map((s: any) => s.narrative).join("\n\n");
     }
   } catch (e) {
     // Legacy fallback
@@ -257,24 +278,25 @@ export function parseGeminiResponse(rawText: string) {
 
   // If JSON parsing failed or scenes are empty, do legacy parsing
   if (scenes.length === 0) {
-    script = rawText;
     const cleanText = rawText.replace(/\[(ADADEGAN|SCENE):.*?\]/g, "").trim();
     if (cleanText) {
       const paragraphs = cleanText.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
       if (paragraphs.length > 1) {
         paragraphs.forEach((p, idx) => {
           scenes.push({
-            title: `Alur ${idx + 1}`,
+            title: `Image ${idx + 1}`,
             narrative: p,
             imagePrompt: `Manga illustration of: ${p.substring(0, 100)}`
           });
         });
+        script = scenes.map((s: any) => s.narrative).join("\n\n");
       } else {
         scenes.push({
-          title: "Naskah Utama",
+          title: "Image 1",
           narrative: cleanText,
           imagePrompt: `Manga illustration of: ${cleanText.substring(0, 100)}`
         });
+        script = cleanText;
       }
     }
   }

@@ -103,7 +103,7 @@ export default function App() {
   const [format, setFormat] = useState<FormatType>("Manhwa");
   const [style, setStyle] = useState<ScriptStyle>("Santai Tongkrongan");
   const [mode, setMode] = useState<ScriptMode>("Kilat");
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<{ name: string; data: string }[]>([]);
   const [mangaLink, setMangaLink] = useState("");
   
   // Results State
@@ -111,7 +111,27 @@ export default function App() {
 
   useEffect(() => {
     const saved = localStorage.getItem("aniki-projects");
-    if (saved) setProjects(JSON.parse(saved));
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const unique: ProjectData[] = [];
+          const seenIds = new Set<string>();
+          for (const p of parsed) {
+            if (p && p.id && !seenIds.has(p.id)) {
+              seenIds.add(p.id);
+              unique.push(p);
+            }
+          }
+          setProjects(unique);
+          localStorage.setItem("aniki-projects", JSON.stringify(unique));
+        } else {
+          setProjects(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse saved projects", e);
+      }
+    }
 
     const savedKey = localStorage.getItem("aniki-gemini-api-key");
     if (savedKey) {
@@ -205,8 +225,8 @@ export default function App() {
     // Optimized project for storage (remove raw input images but keep AI generated assets)
     const storageProject = { ...project, images: [] }; 
     
-    let newProjects: ProjectData[];
     const exists = projects.some(p => p.id === project.id);
+    let newProjects: ProjectData[];
     if (exists) {
       newProjects = projects.map(p => p.id === project.id ? (storageProject as ProjectData) : p);
     } else {
@@ -235,7 +255,7 @@ export default function App() {
         format,
         style,
         mode,
-        imageDatas: uploadedImages
+        imageDatas: uploadedImages.map(img => img.data)
       });
       
       const parsed = parseGeminiResponse(rawResponse);
@@ -248,7 +268,7 @@ export default function App() {
         mode,
         script: rawResponse,
         ...parsed,
-        images: uploadedImages,
+        images: uploadedImages.map(img => img.data),
         generatedAssets: [],
         createdAt: Date.now()
       };
@@ -266,9 +286,9 @@ export default function App() {
 
   const onDrop = async (acceptedFiles: File[]) => {
     const filePromises = acceptedFiles.map(file => {
-      return new Promise<string>((resolve, reject) => {
+      return new Promise<{ name: string; data: string }>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
+        reader.onload = () => resolve({ name: file.name, data: reader.result as string });
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
@@ -276,7 +296,11 @@ export default function App() {
 
     try {
       const results = await Promise.all(filePromises);
-      setUploadedImages(prev => [...prev, ...results]);
+      setUploadedImages(prev => {
+        const combined = [...prev, ...results];
+        combined.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+        return combined;
+      });
     } catch (err) {
       console.error("Error reading files:", err);
       alert("Gagal membaca beberapa file.");
@@ -417,6 +441,22 @@ export default function App() {
           y += 5;
         });
         
+        if (scene.imagePrompt) {
+          y += 2;
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(8);
+          doc.setTextColor(120, 120, 120);
+          const promptLines = doc.splitTextToSize(`Prompt Visual: ${scene.imagePrompt}`, 170);
+          promptLines.forEach((line: string) => {
+            if (y > pageHeight - 20) {
+              doc.addPage();
+              y = 20;
+            }
+            doc.text(line, 20, y);
+            y += 4;
+          });
+        }
+        
         y += 8; // Spacer
       });
     } else {
@@ -468,46 +508,6 @@ export default function App() {
       alert("Gagal bikin gambar untuk adegan ini, cuy.");
     } finally {
       setIsGeneratingImage(false);
-    }
-  };
-
-  const handleDownloadImage = (imageUrl: string, filename: string) => {
-    if (!imageUrl) return;
-    try {
-      if (imageUrl.startsWith('data:')) {
-        const base64Data = imageUrl.split(',')[1];
-        const byteCharacters = atob(base64Data);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let j = 0; j < byteCharacters.length; j++) {
-          byteNumbers[j] = byteCharacters.charCodeAt(j);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'image/png' });
-        const blobUrl = URL.createObjectURL(blob);
-        
-        const element = document.createElement("a");
-        element.href = blobUrl;
-        element.download = filename;
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        URL.revokeObjectURL(blobUrl);
-      } else {
-        const element = document.createElement("a");
-        element.href = imageUrl;
-        element.download = filename;
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-      }
-    } catch (e) {
-      console.error("Gagal mendownload gambar:", e);
-      const element = document.createElement("a");
-      element.href = imageUrl;
-      element.download = filename;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
     }
   };
 
@@ -791,9 +791,12 @@ export default function App() {
                           <div className="grid grid-cols-3 gap-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
                             {uploadedImages.map((img, i) => (
                               <div key={i} className="relative group aspect-square">
-                                <img src={img} className="w-full h-full object-cover rounded border border-white/10" />
+                                <img src={img.data} className="w-full h-full object-cover rounded border border-white/10" />
                                 <div className="absolute top-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[8px] font-tech text-neon-yellow border border-neon-yellow/30">
                                   #{i + 1}
+                                </div>
+                                <div className="absolute bottom-1 left-1 right-1 bg-black/85 px-1 py-0.5 rounded text-[7px] font-tech text-white/90 truncate" title={img.name}>
+                                  {img.name}
                                 </div>
                                 <button 
                                   onClick={(e) => {
@@ -978,16 +981,24 @@ export default function App() {
                                   )}
                                   
                                   {scene.generatedImage && (
-                                    <div className="relative mt-2 rounded overflow-hidden border border-white/10 aspect-video">
+                                    <div className="relative mt-2 rounded overflow-hidden border border-white/10 aspect-video group">
                                       <img src={scene.generatedImage} className="w-full h-full object-cover" />
-                                      <button 
-                                        onClick={() => handleDownloadImage(scene.generatedImage || "", `${currentProject.mangaTitle || "scene"}-${i + 1}.png`)}
-                                        className="absolute top-2 right-2 z-10 px-2 py-1 bg-black/80 hover:bg-neon-green hover:text-black border border-white/10 text-white rounded font-tech text-[9px] uppercase tracking-wider transition-all flex items-center gap-1 shadow-lg active:scale-95"
-                                        title="Unduh Gambar"
-                                      >
-                                        <Download size={11} />
-                                        <span>UNDUH</span>
-                                      </button>
+                                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <button 
+                                          onClick={() => {
+                                            const element = document.createElement("a");
+                                            element.href = scene.generatedImage || "";
+                                            element.download = `${currentProject.mangaTitle || "scene"}-${i + 1}.png`;
+                                            document.body.appendChild(element);
+                                            element.click();
+                                            document.body.removeChild(element);
+                                          }}
+                                          className="p-1.5 bg-black/80 hover:bg-neon-green hover:text-black rounded text-white transition-colors"
+                                          title="Unduh Gambar"
+                                        >
+                                          <Download size={14} />
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
@@ -1107,16 +1118,21 @@ export default function App() {
                             {currentProject.generatedAssets && currentProject.generatedAssets.length > 0 && (
                               <div className="grid grid-cols-1 gap-2 mt-4">
                                 {currentProject.generatedAssets.map((asset, i) => (
-                                  <div key={i} className="relative rounded overflow-hidden border border-white/10 aspect-video bg-black/50">
+                                  <div key={i} className="relative group rounded overflow-hidden border border-white/10 aspect-video bg-black/50">
                                     <img src={asset} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                    <button 
-                                      onClick={() => handleDownloadImage(asset, `${currentProject.mangaTitle || "asset"}-visual-${i + 1}.png`)}
-                                      className="absolute top-2 right-2 z-10 px-2 py-1 bg-black/80 hover:bg-neon-magenta hover:text-black border border-white/10 text-white rounded font-tech text-[9px] uppercase tracking-wider transition-all flex items-center gap-1 shadow-lg active:scale-95"
-                                      title="Unduh Asset"
-                                    >
-                                      <Download size={11} />
-                                      <span>UNDUH</span>
-                                    </button>
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                      <button 
+                                        onClick={() => {
+                                          const link = document.createElement('a');
+                                          link.href = asset;
+                                          link.download = `asset-${i}.png`;
+                                          link.click();
+                                        }}
+                                        className="p-2 bg-neon-cyan text-black rounded-full"
+                                      >
+                                        <Download size={14} />
+                                      </button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
